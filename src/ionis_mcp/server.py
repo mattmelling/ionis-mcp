@@ -851,18 +851,30 @@ def current_conditions(
         if cond.sfi >= 150 and cond.kp < 4:
             lines.append("**Best portable bands**: 20m (reliable all day), 15m (excellent), 10m (open)")
             lines.append("**Strategy**: Start on 15m/10m, fall back to 20m if they close")
+            lines.append("**Modes**: SSB for fast QSO rate — bands are wide open. "
+                         "CW for DX pileups. FT8 unnecessary but works on 10m for weak openings.")
         elif cond.sfi >= 120 and cond.kp < 4:
             lines.append("**Best portable bands**: 20m (primary), 15m/17m (good)")
             lines.append("**Strategy**: 20m is your workhorse, try 15m for DX midday")
+            lines.append("**Modes**: SSB on 20m/15m for quick QSO rate. "
+                         "CW for DX and weaker paths. FT8 on 10m/12m where openings are short.")
         elif cond.sfi >= 90 and cond.kp < 4:
             lines.append("**Best portable bands**: 20m (primary), 40m (reliable)")
             lines.append("**Strategy**: 20m for DX, 40m for regional. 15m worth a try midday.")
+            lines.append("**Modes**: CW/SSB on 20m/40m. "
+                         "FT8 on 15m and above — marginal openings favor digital. "
+                         "SSB on 40m for regional park-to-park.")
         elif cond.kp >= 5:
             lines.append("**Geomagnetic storm active** — conditions degraded on all bands")
             lines.append("**Strategy**: 40m/80m may be more stable than HF. Wait for Kp to drop.")
+            lines.append("**Modes**: FT8 primary — signals will be weak and fading. "
+                         "CW as backup. SSB only on 40m/80m if signals are strong enough.")
         else:
             lines.append("**Best portable bands**: 40m (primary), 20m (daytime), 80m (evening)")
             lines.append("**Strategy**: Low SFI favors lower bands. 20m still works daytime.")
+            lines.append("**Modes**: FT8 on 20m and above — low ionization means weak signals. "
+                         "CW/SSB on 40m/80m where conditions are more reliable. "
+                         "FT8 on 15m for any sporadic openings.")
 
     # Active alerts
     if cond.alerts:
