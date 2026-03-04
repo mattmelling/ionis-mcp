@@ -78,32 +78,21 @@ ionis-download --list
 ionis-download --bundle minimal --force
 ```
 
-## Configure Claude
+## Configure Your MCP Client
+
+ionis-mcp works with any MCP-compatible client. Add the server config and restart — tools appear automatically.
+
+If you downloaded data to a custom location, add `"env": { "IONIS_DATA_DIR": "/path/to/data" }` to any config below.
 
 ### Claude Desktop
 
-Add to `claude_desktop_config.json`:
+Add to `claude_desktop_config.json` (`~/Library/Application Support/Claude/` on macOS, `%APPDATA%\Claude\` on Windows):
 
 ```json
 {
   "mcpServers": {
     "ionis": {
       "command": "ionis-mcp"
-    }
-  }
-}
-```
-
-If you downloaded to a custom location, add the env override:
-
-```json
-{
-  "mcpServers": {
-    "ionis": {
-      "command": "ionis-mcp",
-      "env": {
-        "IONIS_DATA_DIR": "/path/to/my/data"
-      }
     }
   }
 }
@@ -123,7 +112,61 @@ Add to `.claude/settings.json`:
 }
 ```
 
-Restart Claude. Tools appear automatically.
+### ChatGPT Desktop
+
+ChatGPT supports MCP via the [OpenAI Agents SDK](https://developers.openai.com/api/docs/mcp/). Add under Settings > Apps & Connectors, or configure in your agent definition:
+
+```json
+{
+  "mcpServers": {
+    "ionis": {
+      "command": "ionis-mcp"
+    }
+  }
+}
+```
+
+### Cursor
+
+Add to `.cursor/mcp.json` (project-level) or `~/.cursor/mcp.json` (global):
+
+```json
+{
+  "mcpServers": {
+    "ionis": {
+      "command": "ionis-mcp"
+    }
+  }
+}
+```
+
+### VS Code / GitHub Copilot
+
+Add to `.vscode/mcp.json` in your workspace:
+
+```json
+{
+  "servers": {
+    "ionis": {
+      "command": "ionis-mcp"
+    }
+  }
+}
+```
+
+### Gemini CLI
+
+Add to `~/.gemini/settings.json` (global) or `.gemini/settings.json` (project):
+
+```json
+{
+  "mcpServers": {
+    "ionis": {
+      "command": "ionis-mcp"
+    }
+  }
+}
+```
 
 ## Tools
 
