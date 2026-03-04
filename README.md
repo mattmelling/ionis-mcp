@@ -6,13 +6,14 @@ A [Model Context Protocol](https://modelcontextprotocol.io) (MCP) server for HF 
 
 IONIS (Ionospheric Neural Inference System) is an open-source machine learning system for predicting HF (shortwave) radio propagation. The datasets — curated from the world's largest amateur radio telemetry networks — are distributed as SQLite files on [SourceForge](https://sourceforge.net/projects/ionis-ai/).
 
-**ionis-mcp** bridges those datasets to AI assistants via the Model Context Protocol. Install the package, download data, and Claude (Desktop or Code) can answer propagation questions using 10 specialized tools — no SQL required.
+**ionis-mcp** bridges those datasets to AI assistants via the Model Context Protocol. Install the package, download data, and Claude (Desktop or Code) can answer propagation questions using 11 specialized tools — no SQL required.
 
 **Example questions:**
 - "When is 20m open from Idaho to Europe?"
 - "How does solar flux affect 15m propagation?"
 - "Show me 10m paths at 03z where both stations are in the dark"
 - "Compare WSPR and RBN observations on 20m FN31 to JO51"
+- "What are the current band conditions? I'm heading out for POTA."
 - "What were the solar conditions during the February 2026 geomagnetic storm?"
 
 ## Datasets
@@ -138,6 +139,7 @@ Restart Claude. Tools appear automatically.
 | `dark_hour_analysis` | Classify paths by solar geometry — both-day, cross-terminator, both-dark |
 | `solar_conditions` | Historical solar indices for any date range |
 | `band_summary` | Band overview — hour distribution, top grid pairs, distance range |
+| `current_conditions` | Live propagation forecast — SFI, Kp, solar wind, band outlook, POTA/SOTA tips |
 
 ## Data Directory Layout
 

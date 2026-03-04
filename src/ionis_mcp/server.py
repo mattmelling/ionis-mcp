@@ -5,8 +5,8 @@ propagation analytics as MCP tools. Users download datasets, install this
 package, point it at their data directory, and Claude can answer propagation
 questions directly.
 
-10 tools for querying 175M+ signatures across WSPR, RBN, Contest,
-DXpedition, and PSK Reporter datasets.
+11 tools for querying 175M+ signatures across WSPR, RBN, Contest,
+DXpedition, and PSK Reporter datasets, plus live space weather conditions.
 """
 
 import argparse
@@ -31,6 +31,13 @@ from .solar import (
     classify_solar,
     classify_path_solar,
     month_to_mid_doy,
+)
+from .noaa import (
+    fetch_current_conditions,
+    classify_sfi,
+    classify_kp,
+    classify_bz,
+    band_outlook,
 )
 
 logger = logging.getLogger("ionis-mcp")
@@ -754,6 +761,142 @@ def band_summary(
             lines.append(
                 f"| {pair['tx']} | {pair['rx']} | {_format_number(pair['spots'])} | {pair['source']} |"
             )
+
+    return "\n".join(lines)
+
+
+# ── Tool 11: current_conditions ────────────────────────────────────────────
+
+@mcp.tool()
+def current_conditions(
+    qth_grid: str | None = None,
+) -> str:
+    """Live space weather and band conditions — like a morning propagation forecast.
+
+    Fetches real-time solar flux (SFI), Kp index, solar wind data, and
+    active alerts from NOAA SWPC. Generates an operator-friendly band
+    outlook based on current conditions and historical propagation patterns.
+
+    Perfect for: "What bands should I use today?" or "Is it worth setting
+    up for POTA/SOTA on 10m?"
+
+    Args:
+        qth_grid: Your 4-char Maidenhead grid (e.g., "DN13") for
+                  solar elevation context. Optional but recommended.
+    """
+    import datetime
+
+    cond = fetch_current_conditions()
+    now = datetime.datetime.utcnow()
+
+    lines = [
+        f"# Propagation Report — {now.strftime('%B %d, %Y %H:%M')} UTC\n",
+    ]
+
+    # Solar conditions
+    lines.append("## Solar Conditions\n")
+
+    if cond.sfi is not None:
+        sfi_class = classify_sfi(cond.sfi)
+        lines.append(f"**SFI**: {cond.sfi:.0f} ({sfi_class})")
+    else:
+        lines.append("**SFI**: unavailable")
+
+    if cond.kp is not None:
+        kp_class = classify_kp(cond.kp)
+        lines.append(f"**Kp**: {cond.kp:.1f} ({kp_class})")
+    else:
+        lines.append("**Kp**: unavailable")
+
+    # Solar wind
+    wind_parts = []
+    if cond.bz is not None:
+        bz_class = classify_bz(cond.bz)
+        wind_parts.append(f"Bz: {cond.bz:+.1f} nT ({bz_class})")
+    if cond.wind_speed is not None:
+        wind_parts.append(f"Speed: {cond.wind_speed:.0f} km/s")
+    if cond.wind_density is not None:
+        wind_parts.append(f"Density: {cond.wind_density:.1f} p/cm³")
+
+    if wind_parts:
+        lines.append(f"**Solar Wind**: {' | '.join(wind_parts)}")
+
+    # QTH solar elevation
+    if qth_grid:
+        valid = validate_grid(qth_grid)
+        if valid:
+            lat, lon = grid_lookup.get(valid)
+            hour = now.hour
+            doy = now.timetuple().tm_yday
+            elev = solar_elevation_deg(lat, lon, hour + now.minute / 60, doy)
+            cls = classify_solar(elev)
+            lines.append(f"\n**Your QTH** ({valid}): Solar elevation {elev:+.1f}° — {cls}")
+
+    # Band outlook
+    if cond.sfi is not None and cond.kp is not None:
+        outlook = band_outlook(cond.sfi, cond.kp)
+
+        lines.append("\n## Band Outlook\n")
+        lines.append("| Band | Outlook |")
+        lines.append("|------|---------|")
+
+        # Order: high bands first (most SFI-dependent)
+        band_order = ["10m", "12m", "15m", "17m", "20m", "30m", "40m", "80m", "160m"]
+        for b in band_order:
+            if b in outlook:
+                lines.append(f"| {b} | {outlook[b]} |")
+
+        # POTA/SOTA recommendation
+        lines.append("\n## Portable / POTA / SOTA\n")
+        if cond.sfi >= 150 and cond.kp < 4:
+            lines.append("**Best portable bands**: 20m (reliable all day), 15m (excellent), 10m (open)")
+            lines.append("**Strategy**: Start on 15m/10m, fall back to 20m if they close")
+        elif cond.sfi >= 120 and cond.kp < 4:
+            lines.append("**Best portable bands**: 20m (primary), 15m/17m (good)")
+            lines.append("**Strategy**: 20m is your workhorse, try 15m for DX midday")
+        elif cond.sfi >= 90 and cond.kp < 4:
+            lines.append("**Best portable bands**: 20m (primary), 40m (reliable)")
+            lines.append("**Strategy**: 20m for DX, 40m for regional. 15m worth a try midday.")
+        elif cond.kp >= 5:
+            lines.append("**Geomagnetic storm active** — conditions degraded on all bands")
+            lines.append("**Strategy**: 40m/80m may be more stable than HF. Wait for Kp to drop.")
+        else:
+            lines.append("**Best portable bands**: 40m (primary), 20m (daytime), 80m (evening)")
+            lines.append("**Strategy**: Low SFI favors lower bands. 20m still works daytime.")
+
+    # Active alerts
+    if cond.alerts:
+        lines.append("\n## Active Alerts\n")
+        seen = set()
+        for alert in cond.alerts[:10]:
+            if isinstance(alert, dict):
+                msg = alert.get("message", "")
+                if msg:
+                    # Extract the WATCH/WARNING/ALERT line (the meaningful one)
+                    summary = ""
+                    for line in msg.strip().split("\n"):
+                        stripped = line.strip()
+                        for prefix in ("WATCH:", "WARNING:", "ALERT:", "SUMMARY:", "CANCEL"):
+                            if stripped.startswith(prefix):
+                                summary = stripped[:120]
+                                break
+                        if summary:
+                            break
+                    if not summary:
+                        summary = msg.strip().split("\n")[0][:120]
+                    if summary not in seen:
+                        seen.add(summary)
+                        ts = alert.get("issue_datetime", "")[:16]
+                        lines.append(f"- [{ts}] {summary}")
+                    if len(seen) >= 5:
+                        break
+
+    # Fetch errors (if any)
+    if cond.errors:
+        lines.append(f"\n*Note: Some data unavailable — {', '.join(cond.errors)}*")
+
+    lines.append("\n---")
+    lines.append("*Live data from NOAA Space Weather Prediction Center. Cached 15 min.*")
 
     return "\n".join(lines)
 
