@@ -1,13 +1,13 @@
 [project]
 name = "ionis-mcp"
-version = "1.2.1"
+version = "1.2.2"
 description = "MCP server for IONIS HF propagation analytics — 175M signatures from WSPR, RBN, Contest, DXpedition, and PSK Reporter"
 readme = "README.md"
 license = {text = "GPL-3.0-or-later"}
 authors = [{name = "Greg Beam, KI7MT"}]
 requires-python = ">=3.10"
 dependencies = [
-    "mcp>=1.0",
+    "fastmcp>=3.0",
 ]
 keywords = [
     "amateur-radio", "ham-radio", "hf-propagation", "ionosphere", "space-weather",

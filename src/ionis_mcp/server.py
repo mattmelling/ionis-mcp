@@ -14,7 +14,7 @@ import logging
 import os
 import sys
 
-from mcp.server.fastmcp import FastMCP
+from fastmcp import FastMCP
 
 from . import default_data_dir
 from .database import DatabaseManager, SIGNATURE_SOURCES
