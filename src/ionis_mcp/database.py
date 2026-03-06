@@ -123,7 +123,7 @@ class DatabaseManager:
         if not os.path.isfile(full_path):
             raise FileNotFoundError(f"Dataset not found: {full_path}")
 
-        conn = sqlite3.connect(f"file:{full_path}?mode=ro", uri=True)
+        conn = sqlite3.connect(f"file:{full_path}?mode=ro", uri=True, check_same_thread=False)
         conn.row_factory = sqlite3.Row
         self._connections[key] = conn
         return conn
