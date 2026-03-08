@@ -4,7 +4,7 @@ version = "1.2.6"
 description = "MCP server for IONIS HF propagation analytics — 175M signatures from WSPR, RBN, Contest, DXpedition, and PSK Reporter"
 readme = "README.md"
 license = {text = "GPL-3.0-or-later"}
-authors = [{name = "Greg Beam, KI7MT"}]
+authors = [{name = "Greg Beam, KI7MT", email = "ki7mt@yahoo.com"}]
 requires-python = ">=3.10"
 dependencies = [
     "fastmcp>=3.0",
@@ -34,10 +34,10 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://ionis-ai.com/"
+Homepage = "https://ionis-ai.com"
 Repository = "https://github.com/IONIS-AI/ionis-mcp"
-Datasets = "https://sourceforge.net/projects/ionis-ai/"
 Issues = "https://github.com/IONIS-AI/ionis-mcp/issues"
+Datasets = "https://sourceforge.net/projects/ionis-ai/files"
 
 [project.scripts]
 ionis-mcp = "ionis_mcp.server:main"
